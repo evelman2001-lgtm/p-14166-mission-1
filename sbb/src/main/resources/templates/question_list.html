@@ -1,16 +1,23 @@
-<table>
-    <thead>
-    <tr>
-        <th>제목</th>
-        <TH>작성일시</TH>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each = "question, index : ${questionlist}">
-        <td>
+<html layout:decorate="~{layout}">
+<div layout:gragment= "content" class="container my-3>
+<table class= " table
+">
+<thead class="table-dark">
+<tr>
+    <th>번호</th>
+    <th>제목</th>
+    <TH>작성일시</TH>
+</tr>
+</thead>
+<tbody>
+<tr th:each="question, loop : ${questionlist}">
+    <td th:text="${loop.count}"></td>
+    <td>
         <a th:href="@{|/question/detail/${question.id|}" th:text="${question.subject}"></a>
-        </td>
-        <td th:text="${question.createdDate}"></td>
-    </tr>
-    </tbody>
-    </table>
+    </td>
+    <td th:text="${temporal.format(question.createDate, 'yyyy-MM-dd HH:mm'')}"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</html>
