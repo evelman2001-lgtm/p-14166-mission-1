@@ -28,4 +28,8 @@ public class QuestionController {
         model.addAttribute("question", question);
         return "question_Detail";
     }
+    @GetMapping("/create")
+    public String create() {
+        return "question_from";
+    }
 }
