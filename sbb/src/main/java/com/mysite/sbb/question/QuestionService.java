@@ -2,9 +2,10 @@ package com.mysite.sbb.question;
 
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import com.mysite.sbb.DataNotFoundException;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,6 @@ public class QuestionService {
         public List<Question> getList() {
             return this.questionRepository.findAll();
         }
-        @SneakyThrows
         public Question getQuestion(Integer id) {
             Optional<Question> question = this.questionRepository.findById(id);
             if (question.isPresent()) {
@@ -25,6 +25,14 @@ public class QuestionService {
                 throw new DataNotFoundException ("질문을 찾을수 없습니다.");
             }
         }
+        public void create(String subject, String content) {
+            Question q = new Question();
+            q.setSubject(subject);
+            q.setContent(content);
+            q.setCreatedDate(LocalDateTime.now());
+            this.questionRepository.save(q);
+        }
+
     }
 
 
