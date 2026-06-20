@@ -40,15 +40,27 @@ public class AnswerController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/modify/{id}")
-    public String answerModify(AnswerForm answerForm,@PathVariable("id") Integer id, Principal principal)
-    {
-        Answer answer =this.answerService.getAnswer(id);
-        if(!answer.getAuthor().equals(principal.getName()))
-        {
+    public String answerModify(@Valid AnswerForm answerForm, BindingResult bindingResult, @PathVariable("id") Integer id, Principal principal) {
+        if (BindingResult.hasError()) {
+            return "question_detail";
+        }
+        Answer answer = this.answerService.getAnswer(id);
+
+        if(!answer.getAuthor().getUsername().equals(principal.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정 권한이 없습니다.");
         }
-        answerForm.setContent(answer.getContent());
-        return "answer_form";
+        this.answerService.modify(answer, answerForm.getContent());
+        return String.format("redirect:/question/detail/%d", answer.getQuestion().getId());
+    }
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/delete/{id}")
+    public String answerDelete(Principal principal, @PathVariable("id") Integer id) {
+        Answer answer = this.answerService.getAnswer(id);
+        if (!answer.getAuthor().getUsername().equals(principal.getName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제 권한이 없습니다.");
+        }
+        this.answerService.delete(answer);
+        return String.format("redirect:/question/detail/%d", answer.getQuestion().getId());
     }
 }
 
