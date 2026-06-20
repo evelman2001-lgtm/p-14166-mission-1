@@ -1,12 +1,15 @@
 package com.mysite.sbb.question;
 
 
+import com.mysite.sbb.answer.Answer;
 import com.mysite.sbb.user.SiteUser;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.mysite.sbb.DataNotFoundException;
 import com.mysite.sbb.user.SiteUser;
@@ -14,11 +17,30 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @RequiredArgsConstructor
 @Service
 public class QuestionService {
         private final QuestionRepository questionRepository;
+
+        private Specification<Question> search(String kw)   {
+            return new Specification<>() {
+                private static final long serialVersionUID = 1L;
+                @Override
+                public Predicate toPredicate(Root<Question> q, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                    query.distinct(true);
+                    Join<Question, SiteUser> u1 = q.join("author", JoinType.LEFT);
+                    Join<Question, Answer> a = q.join("answerList", JoinType.LEFT);
+                    Join<Answer, SiteUser> u2 = a.join("author", JoinType.LEFT);
+                    return cb.or(cb.like(q.get("subject"), "%" + kw + "%"),
+                            cb.like(q.get("content"), "%" + kw + "%"),
+                            cb.like(u1.get("username"), "%" + kw + "%"),
+                            cb.like(a.get("content"), "%" + kw + "%"),
+                            cb.like(u2.get("username"), "%" + kw + "%"));
+                }
+            }
+        }
 
         public List<Question> getList() {
             return this.questionRepository.findAll();
@@ -31,11 +53,12 @@ public class QuestionService {
                 throw new DataNotFoundException ("질문을 찾을수 없습니다.");
             }
         }
-        public Page<Question> getList(int page) {
+        public Page<Question> getList(int page, String kw) {
             List<Sort.Order> sorts = new ArrayList<>();
             sorts.add(Sort.Order.desc("createdDate"));
             Pageable pageable = PageRequest.of(page, 10, Sort.by(sorts));
-            return this.questionRepository.findAll(pageable);
+            Specification<Question> spec = search(kw);
+            return this.questionRepository.findAll(search(kw), pageable);
         }
         public void create(String subject, String content, SiteUser user) {
             Question q = new Question();
